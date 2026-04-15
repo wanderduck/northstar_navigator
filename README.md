@@ -1,5 +1,7 @@
 # NorthStar Navigator
 
+**[Live Demo](https://navigator.wanderduck.dev)** | **[GGUF Model](https://huggingface.co/wanderduck/northstar-navigator-gguf)** | **[Kaggle Competition](https://www.kaggle.com/competitions/gemma-4-good-hackathon)**
+
 ## Introduction
 The **NorthStar Navigator** is a privacy-first, AI-powered application developed for the **Kaggle Gemma 4 Good Hackathon**. Navigating government assistance programs can be overwhelming, especially when faced with complex terminology, strict eligibility rules, and dispersed information. This application aims to simplify that process by helping users identify and understand government benefits programs—with a specific focus on Minnesota—using accessible, plain language. 
 
@@ -21,7 +23,7 @@ The application features a clean user interface built with Gradio and relies on 
 *   **Targeted Program Matching:** Employs robust hybrid search (vector embeddings combined with keyword search) to evaluate eligibility against federal, state, and county-specific rules.
 *   **Adjustable Readability Levels:** Generates responses tailored to specific reading levels (Simple, Standard, Detailed) using the `textstat` library to ensure true "plain language" accessibility.
 *   **Mandatory Disclaimers & Safety:** Enforces strict safety rails, ensuring the AI never provides definitive legal or financial determinations, but rather assesses *potential* eligibility and points to official government resources.
-*   **Multilingual Support:** Capable of generating tailored responses in multiple languages (e.g., English, Spanish) to better serve diverse communities.
+*   **Multilingual Support:** Generates responses in English, Spanish, Hmong, and Somali — covering Minnesota's largest LEP communities.
 
 ## Getting Started
 
@@ -31,9 +33,10 @@ Before running the application, ensure you have the following installed:
 *   **`uv`**: The fast Python package manager.
 *   **Ollama**: Must be installed and running locally as a service (`systemctl start ollama` on Linux, or via the desktop application).
 
-*Note: The application currently defaults to the `gemma3:4b` model via Ollama (until the Gemma 4 E4B model is available). Ensure you have pulled the model before starting:*
+The application uses a fine-tuned Gemma 4 E4B model (GGUF q4_k_m, 5.3GB). Download and load it:
 ```bash
-ollama pull gemma3:4b
+hf download wanderduck/northstar-navigator-gguf model-q4_k_m.gguf Modelfile --local-dir output/gguf/gguf
+ollama create navigator -f output/gguf/gguf/Modelfile
 ```
 
 ### Installation

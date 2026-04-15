@@ -44,19 +44,27 @@ cython_debug/
 .idea/
 
 
+# RunPod credentials and CLI binary
+runpod
 runpod.pub
 runpodctl
 
+# Data and model weights (large, downloaded at runtime)
 output/
 data/
+models/
+
+# Build/tool artifacts
 .playwright-mcp/
+gen-lang-client-*.json
 
-gen-lang-client-0685342464-c171ba59f0e9.json
+# Debug/development outputs
+docs/conversation/
+docs/reports/runpod_sections/
+docs/outputs/
 
+# Large images (keep smaller branding assets)
+docs/Styling/wanderduck_office_coloured.png
 
-docs/conversation
-/docs/reports/runpod_sections
-/docs/outputs
-
-/home/wanderduck/000_Duckspace/WanderduckDevelopment/Ducks/Kaggle/Gemma4-GoodHackathon/.claude/worktrees/navigator-implementation/runpod**
-runpod
+# AI assistant configs (local only)
+GEMINI.md

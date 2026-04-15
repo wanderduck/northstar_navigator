@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderduck Prism - PyCharm Theme Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            background: #0F0F0F;
+            color: #DFDFDF;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #64AD9A;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #9B8F83;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .editor {
+            background: #2F2F2F;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .editor-header {
+            background: #0F0F0F;
+            padding: 10px 15px;
+            border-bottom: 1px solid #264660;
+            display: flex;
+            align-items: center;
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+        
+        .control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .control.close { background: #D46658; }
+        .control.minimize { background: #F1EE88; }
+        .control.maximize { background: #64AD9A; }
+        
+        .file-name {
+            color: #9B8F83;
+            font-size: 13px;
+        }
+        
+        .editor-content {
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        .code {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .line {
+            display: flex;
+            margin: 0;
+        }
+        
+        .line:hover {
+            background: #3F3F3F;
+        }
+        
+        .line-number {
+            color: #9B8F83;
+            width: 40px;
+            text-align: right;
+            padding-right: 20px;
+            user-select: none;
+        }
+        
+        .line.active {
+            background: #3F3F3F;
+        }
+        
+        .line.active .line-number {
+            color: #8ACBBA;
+        }
+        
+        /* Python Syntax Highlighting */
+        .keyword { color: #724696; font-weight: bold; }
+        .builtin { color: #8FBAC8; }
+        .string { color: #64AD9A; }
+        .f-string { color: #8ACBBA; }
+        .number { color: #ECB196; }
+        .comment { color: #9B8F83; font-style: italic; }
+        .decorator { color: #F1EE88; }
+        .function { color: #9A6EBE; }
+        .class-name { color: #C296E6; font-weight: bold; }
+        .parameter { color: #EC7E78; }
+        .self { color: #D46658; font-style: italic; }
+        .type-annotation { color: #9CCBD8; }
+        .operator { color: #5C8492; }
+        .punctuation { color: #DFDFDF; }
+        .docstring { color: #9F9F9F; }
+        
+        /* Color Palette Display */
+        .palette-section {
+            margin-bottom: 40px;
+        }
+        
+        .palette-section h2 {
+            color: #64AD9A;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #264660;
+            padding-bottom: 10px;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .color-card {
+            background: #3F3F3F;
+            border-radius: 6px;
+            padding: 15px;
+            transition: transform 0.2s;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .color-swatch {
+            height: 88px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .color-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .color-hex {
+            color: #9B8F83;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .brand-story {
+            background: #3F3F3F;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #64AD9A;
+        }
+        
+        .brand-story p {
+            color: #DFDFDF;
+            line-height: 1.6;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wanderduck Prism Theme</h1>
+        <p class="subtitle">Data Science Color Architecture for PyCharm</p>
+        
+        <div class="brand-story">
+            <p>Like a duck's journey across varied waters—from deep lakes to flowing streams—our palette navigates the spectrum of data science: from profound analysis to brilliant insights. Each color represents a stage in the data discovery journey.</p>
+        </div>
+        
+        <div class="editor">
+            <div class="editor-header">
+                <div class="window-controls">
+                    <div class="control close"></div>
+                    <div class="control minimize"></div>
+                    <div class="control maximize"></div>
+                </div>
+                <div class="file-name">wanderduck_analytics.py</div>
+            </div>
+            <div class="editor-content">
+                <div class="code">
+                    <div class="line">
+                        <span class="line-number">1</span>
+                        <span class="comment"># Wanderduck Development - Data Analytics Module</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">2</span>
+                        <span class="docstring">"""Data transformation and visualization tools."""</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">3</span>
+                        <span></span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">4</span>
+                        <span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+                    </div>
+                    <div class="line">
+                        <span class="line-number">5</span>
+                        <span class="keyword">import</span> numpy <span class="keyword">as</span> np
+                    </div>
+                    <div class="line">
+                        <span class="line-number">6</span>
+                        <span class="keyword">from</span> typing <span class="keyword">import</span> List<span class="punctuation">,</span> Dict<span class="punctuation">,</span> Optional
+                    </div>
+                    <div class="line">
+                        <span class="line-number">7</span>
+                        <span></span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">8</span>
+                        <span class="decorator">@dataclass</span>
+                    </div>
+                    <div class="line active">
+                        <span class="line-number">9</span>
+                        <span class="keyword">class</span> <span class="class-name">DataPipeline</span><span class="punctuation">:</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">10</span>
+                        <span>    </span><span class="docstring">"""Transform data through analysis stages."""</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">11</span>
+                        <span>    </span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">12</span>
+                        <span>    </span><span class="keyword">def</span> <span class="function">__init__</span><span class="punctuation">(</span><span class="self">self</span><span class="punctuation">,</span> <span class="parameter">config</span><span class="punctuation">:</span> <span class="type-annotation">Dict</span><span class="punctuation">[</span><span class="type-annotation">str</span><span class="punctuation">,</span> <span class="type-annotation">Any</span><span class="punctuation">]</span><span class="punctuation">)</span><span class="punctuation">:</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">13</span>
+                        <span>        </span><span class="self">self</span><span class="punctuation">.</span>config <span class="operator">=</span> config
+                    </div>
+                    <div class="line">
+                        <span class="line-number">14</span>
+                        <span>        </span><span class="self">self</span><span class="punctuation">.</span>threshold <span class="operator">=</span> <span class="number">0.95</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">15</span>
+                        <span>        </span><span class="self">self</span><span class="punctuation">.</span>iterations <span class="operator">=</span> <span class="number">1000</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">16</span>
+                        <span></span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">17</span>
+                        <span>    </span><span class="keyword">def</span> <span class="function">transform</span><span class="punctuation">(</span><span class="self">self</span><span class="punctuation">,</span> <span class="parameter">data</span><span class="punctuation">:</span> <span class="type-annotation">pd.DataFrame</span><span class="punctuation">)</span> <span class="operator">-></span> <span class="type-annotation">pd.DataFrame</span><span class="punctuation">:</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">18</span>
+                        <span>        </span><span class="docstring">"""Apply transformation pipeline to data."""</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">19</span>
+                        <span>        </span><span class="comment"># Data validation stage</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">20</span>
+                        <span>        </span><span class="keyword">if</span> data<span class="punctuation">.</span>empty<span class="punctuation">:</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">21</span>
+                        <span>            </span><span class="keyword">raise</span> <span class="builtin">ValueError</span><span class="punctuation">(</span><span class="string">"Empty dataset provided"</span><span class="punctuation">)</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">22</span>
+                        <span></span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">23</span>
+                        <span>        </span><span class="comment"># Apply transformations</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">24</span>
+                        <span>        </span>result <span class="operator">=</span> data<span class="punctuation">.</span><span class="builtin">copy</span><span class="punctuation">(</span><span class="punctuation">)</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">25</span>
+                        <span>        </span><span class="keyword">for</span> column <span class="keyword">in</span> result<span class="punctuation">.</span>columns<span class="punctuation">:</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">26</span>
+                        <span>            </span>mean_val <span class="operator">=</span> result<span class="punctuation">[</span>column<span class="punctuation">]</span><span class="punctuation">.</span><span class="builtin">mean</span><span class="punctuation">(</span><span class="punctuation">)</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">27</span>
+                        <span>            </span>result<span class="punctuation">[</span>column<span class="punctuation">]</span> <span class="operator">=</span> result<span class="punctuation">[</span>column<span class="punctuation">]</span><span class="punctuation">.</span><span class="builtin">fillna</span><span class="punctuation">(</span>mean_val<span class="punctuation">)</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">28</span>
+                        <span></span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">29</span>
+                        <span>        </span><span class="builtin">print</span><span class="punctuation">(</span><span class="f-string">f"Processed {</span><span class="builtin">len</span><span class="punctuation">(</span>result<span class="punctuation">)</span><span class="f-string">} rows successfully"</span><span class="punctuation">)</span>
+                    </div>
+                    <div class="line">
+                        <span class="line-number">30</span>
+                        <span>        </span><span class="keyword">return</span> result
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="palette-section">
+            <h2>Foundation Color</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #64AD9A;"></div>
+                    <div class="color-name">Duck Green</div>
+                    <div class="color-hex">#64AD9A</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Green/Teal Family</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #3C6B58;"></div>
+                    <div class="color-name">Forest Lake</div>
+                    <div class="color-hex">#3C6B58</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #487768;"></div>
+                    <div class="color-name">Pine Depth</div>
+                    <div class="color-hex">#487768</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #548378;"></div>
+                    <div class="color-name">Sage Water</div>
+                    <div class="color-hex">#548378</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #608F88;"></div>
+                    <div class="color-name">Moss Stream</div>
+                    <div class="color-hex">#608F88</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #6C9B98;"></div>
+                    <div class="color-name">Jade Light</div>
+                    <div class="color-hex">#6C9B98</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #78A7A8;"></div>
+                    <div class="color-name">Seafoam</div>
+                    <div class="color-hex">#78A7A8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #84B3B8;"></div>
+                    <div class="color-name">Aqua Mist</div>
+                    <div class="color-hex">#84B3B8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #90BFC8;"></div>
+                    <div class="color-name">Pale Teal</div>
+                    <div class="color-hex">#90BFC8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8ACBBA;"></div>
+                    <div class="color-name">Flow Teal</div>
+                    <div class="color-hex">#8ACBBA</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Blues Family</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1A3A50;"></div>
+                    <div class="color-name">Midnight Ocean</div>
+                    <div class="color-hex">#1A3A50</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #264660;"></div>
+                    <div class="color-name">Deep Current</div>
+                    <div class="color-hex">#264660</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2A5573;"></div>
+                    <div class="color-name">Query Blue</div>
+                    <div class="color-hex">#2A5573</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #325270;"></div>
+                    <div class="color-name">Navy Wave</div>
+                    <div class="color-hex">#325270</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #3E5E80;"></div>
+                    <div class="color-name">Storm Surge</div>
+                    <div class="color-hex">#3E5E80</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #5676A0;"></div>
+                    <div class="color-name">Bay Blue</div>
+                    <div class="color-hex">#5676A0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #5C8492;"></div>
+                    <div class="color-name">Lake Blue</div>
+                    <div class="color-hex">#5C8492</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #6282B0;"></div>
+                    <div class="color-name">Harbor Light</div>
+                    <div class="color-hex">#6282B0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #6E8EC0;"></div>
+                    <div class="color-name">Morning Tide</div>
+                    <div class="color-hex">#6E8EC0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #7A9AD0;"></div>
+                    <div class="color-name">Sky Reflection</div>
+                    <div class="color-hex">#7A9AD0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #86A6E0;"></div>
+                    <div class="color-name">Shallow Water</div>
+                    <div class="color-hex">#86A6E0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8FBAC8;"></div>
+                    <div class="color-name">Stream Blue</div>
+                    <div class="color-hex">#8FBAC8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #92B2F0;"></div>
+                    <div class="color-name">Foam Blue</div>
+                    <div class="color-hex">#92B2F0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9EBEFF;"></div>
+                    <div class="color-name">Horizon Blue</div>
+                    <div class="color-hex">#9EBEFF</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9CCBD8;"></div>
+                    <div class="color-name">Ice Aqua</div>
+                    <div class="color-hex">#9CCBD8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #A8D7E8;"></div>
+                    <div class="color-name">Crystal Water</div>
+                    <div class="color-hex">#A8D7E8</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Violet Family</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #4A2670;"></div>
+                    <div class="color-name">Night Violet</div>
+                    <div class="color-hex">#4A2670</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #563280;"></div>
+                    <div class="color-name">Deep Plum</div>
+                    <div class="color-hex">#563280</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #623E90;"></div>
+                    <div class="color-name">Royal Purple</div>
+                    <div class="color-hex">#623E90</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #724696;"></div>
+                    <div class="color-name">Model Purple</div>
+                    <div class="color-hex">#724696</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #6E4AA0;"></div>
+                    <div class="color-name">Orchid Deep</div>
+                    <div class="color-hex">#6E4AA0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #7A56B0;"></div>
+                    <div class="color-name">Iris</div>
+                    <div class="color-hex">#7A56B0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #7460A8;"></div>
+                    <div class="color-name">Dusty Purple</div>
+                    <div class="color-hex">#7460A8</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8662C0;"></div>
+                    <div class="color-name">Wisteria</div>
+                    <div class="color-hex">#8662C0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8876BE;"></div>
+                    <div class="color-name">Muted Lavender</div>
+                    <div class="color-hex">#8876BE</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #926ED0;"></div>
+                    <div class="color-name">Soft Violet</div>
+                    <div class="color-hex">#926ED0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9A6EBE;"></div>
+                    <div class="color-name">Pattern Violet</div>
+                    <div class="color-hex">#9A6EBE</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9E7AE0;"></div>
+                    <div class="color-name">Light Purple</div>
+                    <div class="color-hex">#9E7AE0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #AA86F0;"></div>
+                    <div class="color-name">Pale Violet</div>
+                    <div class="color-hex">#AA86F0</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #B692FF;"></div>
+                    <div class="color-name">Lavender Light</div>
+                    <div class="color-hex">#B692FF</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #C296E6;"></div>
+                    <div class="color-name">Dream Lavender</div>
+                    <div class="color-hex">#C296E6</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Reds and Corals</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #A8434A;"></div>
+                    <div class="color-name">Soft Dawn Red</div>
+                    <div class="color-hex">#A8434A</div> 
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #B8555E;"></div>
+                    <div class="color-name">Warm Brick Red</div>
+                    <div class="color-hex">#B8555E</div>
+                </div> 
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #C85A48;"></div>
+                    <div class="color-name">Sunset Deep</div>
+                    <div class="color-hex">#C85A48</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #D46658;"></div>
+                    <div class="color-name">Coral Reef</div>
+                    <div class="color-hex">#D46658</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #C16B7A;"></div>
+                    <div class="color-name">Muted Rose Pink</div>
+                    <div class="color-hex">#C16B7A</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E07268;"></div>
+                    <div class="color-name">Salmon Light</div>
+                    <div class="color-hex">#E07268</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #EC7E78;"></div>
+                    <div class="color-name">Peach Coral</div>
+                    <div class="color-hex">#EC7E78</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #D68A92;"></div>
+                    <div class="color-name">Dusty Mauve Pink</div>
+                    <div class="color-hex">#D68A92</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F88A88;"></div>
+                    <div class="color-name">Rose Gold</div>
+                    <div class="color-hex">#F88A88</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #DDA090;"></div>
+                    <div class="color-name">Desert Sand</div>
+                    <div class="color-hex">#DDA090</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FF9698;"></div>
+                    <div class="color-name">Blush Pink</div>
+                    <div class="color-hex">#FF9698</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E9ACA0;"></div>
+                    <div class="color-name">Dusty Rose</div>
+                    <div class="color-hex">#E9ACA0</div>
+                </div>            
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #ECB196;"></div>
+                    <div class="color-name">Insight Orange</div>
+                    <div class="color-hex">#ECB196</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Yellows</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #D4C444;"></div>
+                    <div class="color-name">Harvest Gold</div>
+                    <div class="color-hex">#D4C444</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #E0D054;"></div>
+                    <div class="color-name">Sunshine</div>
+                    <div class="color-hex">#E0D054</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #ECDC64;"></div>
+                    <div class="color-name">Lemon Gold</div>
+                    <div class="color-hex">#ECDC64</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F8E874;"></div>
+                    <div class="color-name">Butter Yellow</div>
+                    <div class="color-hex">#F8E874</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F1EE88;"></div>
+                    <div class="color-name">Discovery Gold</div>
+                    <div class="color-hex">#F1EE88</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FFF484;"></div>
+                    <div class="color-name">Pale Sun</div>
+                    <div class="color-hex">#FFF484</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FFFF94;"></div>
+                    <div class="color-name">Light Cream</div>
+                    <div class="color-hex">#FFFF94</div>
+                </div>
+            </div>
+        </div>
+        <div class="palette-section">
+            <h2>Neutrals</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #0F0F0F;"></div>
+                    <div class="color-name">Absolute Black</div>
+                    <div class="color-hex">#0F0F0F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #2F2F2F;"></div>
+                    <div class="color-name">Data Black</div>
+                    <div class="color-hex">#2F2F2F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #3F3F3F;"></div>
+                    <div class="color-name">Carbon</div>
+                    <div class="color-hex">#3F3F3F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #5F5F5F;"></div>
+                    <div class="color-name">Graphite</div>
+                    <div class="color-hex">#5F5F5F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #8A7A6B;"></div>
+                    <div class="color-name">Taupe Neutral</div>
+                    <div class="color-hex">#8A7A6B</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #7F7F7F;"></div>
+                    <div class="color-name">Steel Grey</div>
+                    <div class="color-hex">#7F7F7F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9B8F83;"></div>
+                    <div class="color-name">Cloud Grey</div>
+                    <div class="color-hex">#9B8F83</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #A5968A;"></div>
+                    <div class="color-name">Warm Slate Neutral</div>
+                    <div class="color-hex">#A5968A</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #9F9F9F;"></div>
+                    <div class="color-name">Silver Grey</div>
+                    <div class="color-hex">#9F9F9F</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #B8A89B;"></div>
+                    <div class="color-name">Beige Neutral</div>
+                    <div class="color-hex">#B8A89B</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #BFBFBF;"></div>
+                    <div class="color-name">Light Silver</div>
+                    <div class="color-hex">#BFBFBF</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #DFDFDF;"></div>
+                    <div class="color-name">Pearl Grey</div>
+                    <div class="color-hex">#DFDFDF</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #F5F5F5;"></div>
+                    <div class="color-name">Off White</div>
+                    <div class="color-hex">#F5F5F5</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #FFFFFF;"></div>
+                    <div class="color-name">Pure White</div>
+                    <div class="color-hex">#FFFFFF</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

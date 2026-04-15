@@ -28,6 +28,23 @@ class ResponseGenerator:
 
         return self.client.chat(context, system_prompt=system_prompt)
 
+    def generate_stream(self, response: BenefitsResponse, profile: UserProfile):
+        """Stream a plain-language response token by token.
+
+        Yields partial response strings (cumulative).
+        """
+        context = self._format_context(response, profile)
+        language = SUPPORTED_LANGUAGES.get(profile.language, "English")
+        system_prompt = get_response_prompt(
+            reading_level=profile.reading_level.value,
+            language=language,
+        )
+
+        accumulated = ""
+        for token in self.client.chat_stream(context, system_prompt=system_prompt):
+            accumulated += token
+            yield accumulated
+
     def _format_context(self, response: BenefitsResponse, profile: UserProfile) -> str:
         """Format eligibility results as structured context for the LLM."""
         parts = []

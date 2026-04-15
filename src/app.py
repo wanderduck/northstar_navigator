@@ -14,10 +14,24 @@ from navigator.response import ResponseGenerator
 from navigator.prompts import RESPONSE_DISCLAIMER
 from navigator.config import OLLAMA_BASE_URL, OLLAMA_MODEL, PROJECT_ROOT
 
-logging.basicConfig(level=logging.INFO)
+def _setup_logging():
+    """Configure logging with file output when running on RunPod."""
+    from navigator.config import IS_RUNPOD
+    handlers = [logging.StreamHandler()]
+    if IS_RUNPOD:
+        from logging.handlers import RotatingFileHandler
+        log_path = Path("/workspace/navigator.log")
+        handlers.append(RotatingFileHandler(log_path, maxBytes=10_000_000, backupCount=3))
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=handlers,
+    )
+
+_setup_logging()
 logger = logging.getLogger(__name__)
 
-ICON_PATH = PROJECT_ROOT / "notebook_images" / "NorthStar_Navigator_icon.png"
+ICON_PATH = PROJECT_ROOT / "docs" / "Styling" / "NorthStar_Navigator_icon.png"
 
 # Initialize components
 client = OllamaClient()
@@ -51,10 +65,11 @@ def process_message(
     history: list[dict],
     reading_level: str,
     language: str,
-) -> str:
-    """Process a user message through the Navigator pipeline."""
+) -> Generator[str, None, None]:
+    """Process a user message through the Navigator pipeline (streaming)."""
     try:
         # Stage 1: Extract profile
+        yield "Analyzing your situation..."
         profile, missing = intake.extract(message)
 
         # Override reading level and language from UI settings
@@ -64,24 +79,27 @@ def process_message(
 
         # If missing critical info, ask follow-up
         if missing:
-            return intake.ask_followup(missing)
+            yield intake.ask_followup(missing)
+            return
 
         # Stage 2: Determine eligibility
+        yield "Finding programs you may be eligible for..."
         benefits_response = engine.evaluate(profile)
 
-        # Stage 3: Generate plain-language response
-        response_text = generator.generate(benefits_response, profile)
-
-        # Append sources section
+        # Stage 3: Stream plain-language response
         sources = _format_sources(benefits_response)
-        if sources:
-            response_text += f"\n\n---\n**Sources & Reasoning**\n{sources}"
+        suffix = f"\n\n---\n**Sources & Reasoning**\n{sources}" if sources else ""
 
-        return response_text
+        for partial in generator.generate_stream(benefits_response, profile):
+            yield partial
+
+        # Append sources after streaming completes
+        if suffix:
+            yield partial + suffix
 
     except Exception as e:
         logger.exception("Error processing message")
-        return (
+        yield (
             "I'm sorry, I encountered an error processing your request. "
             "Please try rephrasing your situation, or contact 211 by dialing 2-1-1 "
             "for immediate assistance.\n\n"
@@ -102,20 +120,13 @@ def _format_sources(benefits_response) -> str:
 with gr.Blocks(
     title="NorthStar Navigator",
 ) as demo:
-    with gr.Row(equal_height=True):
-        if ICON_PATH.exists():
-            gr.Image(
-                value=str(ICON_PATH),
-                width=80,
-                height=80,
-                show_label=False,
-                container=False,
-                interactive=False,
-            )
-        gr.Markdown(
-            "# NorthStar Navigator\n"
-            "*Powered by Gemma 4 via Ollama - Your data never leaves this device*"
-        )
+    gr.HTML(
+        value=f'<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">'
+        f'<img src="/file={ICON_PATH}" style="height:56px;width:auto;" alt="NorthStar Navigator">'
+        f'<div><h1 style="margin:0;font-size:1.8em;">NorthStar Navigator</h1>'
+        f'<p style="margin:2px 0 0;opacity:0.7;font-style:italic;">Powered by Gemma 4 via Ollama &mdash; Your data never leaves this device</p></div>'
+        f'</div>',
+    )
 
     with gr.Row():
         # Left sidebar
@@ -186,6 +197,48 @@ with gr.Blocks(
     demo.load(fn=check_health, inputs=[], outputs=[health_status])
 
 
+def _build_theme() -> gr.themes.Base:
+    """Build a custom Gradio theme using the Wanderduck color palette."""
+    return gr.themes.Base(
+        primary_hue=gr.themes.Color(
+            c50="#e8f5f0", c100="#c6e8dd", c200="#a0d9c8",
+            c300="#8ACBBA", c400="#64AD9A", c500="#4d9683",
+            c600="#3C6B58", c700="#2d5043", c800="#1e362d", c900="#0f1b17",
+            c950="#080e0c",
+        ),
+        secondary_hue=gr.themes.Color(
+            c50="#e6eef4", c100="#c0d4e3", c200="#97b7d0",
+            c300="#6d9abd", c400="#4a7ea8", c500="#264660",
+            c600="#1A3A50", c700="#142d3e", c800="#0e202c", c900="#08131a",
+            c950="#040a0d",
+        ),
+        neutral_hue=gr.themes.Color(
+            c50="#f5f5f5", c100="#DFDFDF", c200="#bfbfbf",
+            c300="#9F9F9F", c400="#9B8F83", c500="#7f7f7f",
+            c600="#5f5f5f", c700="#3F3F3F", c800="#2F2F2F", c900="#1f1f1f",
+            c950="#0F0F0F",
+        ),
+        font=["Inter", "system-ui", "sans-serif"],
+    ).set(
+        body_background_fill="#0F0F0F",
+        body_background_fill_dark="#0F0F0F",
+        body_text_color="#DFDFDF",
+        body_text_color_dark="#DFDFDF",
+        block_background_fill="#1f1f1f",
+        block_background_fill_dark="#1f1f1f",
+        block_border_color="#264660",
+        block_border_color_dark="#264660",
+        button_primary_background_fill="#64AD9A",
+        button_primary_background_fill_dark="#64AD9A",
+        button_primary_text_color="#0F0F0F",
+        button_primary_text_color_dark="#0F0F0F",
+        input_background_fill="#2F2F2F",
+        input_background_fill_dark="#2F2F2F",
+        input_border_color="#3F3F3F",
+        input_border_color_dark="#3F3F3F",
+    )
+
+
 def main():
     """Launch the Navigator Gradio app."""
     demo.queue()
@@ -193,7 +246,7 @@ def main():
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
-        theme=gr.themes.Base(),
+        theme=_build_theme(),
     )
 
 

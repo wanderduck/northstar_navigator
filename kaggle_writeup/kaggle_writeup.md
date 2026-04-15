@@ -46,4 +46,4 @@ That is not a feature. That is dignity. And it is what happens when the right to
 
 ---
 
-**Resources:** [Live Demo](https://vcae8sqtjiyxrc-7860.proxy.runpod.net) | [GitHub](https://github.com/wanderduck/northstar_navigator) | [GGUF Model](https://huggingface.co/wanderduck/northstar-navigator-gguf) | [Kaggle Notebook](https://www.kaggle.com/code/wanderduck/northstar-navigator)
+**Resources:** [Live Demo](https://navigator.wanderduck.dev) | [GitHub](https://github.com/wanderduck/northstar_navigator) | [GGUF Model](https://huggingface.co/wanderduck/northstar-navigator-gguf) | [Kaggle Notebook](https://www.kaggle.com/code/wanderduck/northstar-navigator)

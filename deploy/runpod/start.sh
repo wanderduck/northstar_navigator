@@ -84,16 +84,32 @@ curl -sf http://localhost:11434/api/generate \
     >/dev/null 2>&1 || echo "      Warning: pre-warm failed (non-fatal)"
 echo "      Model warm."
 
-# ── Step 4: Launch Gradio ────────────────────────────────────────────────────
+# ── Step 4: Start Cloudflare Tunnel (if token saved) ─────────────────────────
+CF_TOKEN_FILE="/workspace/.cloudflare_tunnel_token"
+if [[ -f "$CF_TOKEN_FILE" ]] && command -v cloudflared &>/dev/null; then
+    echo "[4/5] Starting Cloudflare Tunnel..."
+    CF_TOKEN="$(cat "$CF_TOKEN_FILE")"
+    nohup cloudflared tunnel --no-autoupdate run --token "$CF_TOKEN" \
+        >/var/log/cloudflared.log 2>&1 &
+    echo "      Tunnel PID: $! (log: /var/log/cloudflared.log)"
+    echo "      URL: https://navigator.wanderduck.dev"
+else
+    echo "[4/5] Cloudflare Tunnel: not configured (optional)"
+fi
+
+# ── Step 5: Launch Gradio ────────────────────────────────────────────────────
 POD_ID="${RUNPOD_POD_ID:-unknown}"
-echo "[4/4] Launching Gradio UI on port 7860 ..."
+echo "[5/5] Launching Gradio UI on port 7860 ..."
 echo ""
 echo "============================================================"
 echo " NorthStar Navigator is starting!"
 echo ""
 echo "   Gradio:  http://0.0.0.0:7860"
 if [[ "$POD_ID" != "unknown" ]]; then
-echo "   Public:  https://${POD_ID}-7860.proxy.runpod.net"
+echo "   RunPod:  https://${POD_ID}-7860.proxy.runpod.net"
+fi
+if [[ -f "$CF_TOKEN_FILE" ]]; then
+echo "   Custom:  https://navigator.wanderduck.dev"
 fi
 echo "   Ollama:  http://0.0.0.0:11434"
 echo ""
