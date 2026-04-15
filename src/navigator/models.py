@@ -24,7 +24,7 @@ def fpl_threshold(household_size: int) -> int:
 
 
 class Dependent(BaseModel):
-    age: int
+    age: int | None = None
     relationship: str = "child"
 
 
