@@ -13,9 +13,25 @@ FPL_DIR = DATA_DIR / "fpl_tables"
 PROGRAMS_DIR = DATA_DIR / "programs"
 TRAINING_DIR = DATA_DIR / "training"
 
-# Ollama
-OLLAMA_BASE_URL = "http://localhost:11434"
+# RunPod detection — RunPod auto-sets RUNPOD_POD_ID in pod environments
+RUNPOD_POD_ID = os.environ.get("RUNPOD_POD_ID")
+IS_RUNPOD = RUNPOD_POD_ID is not None
+
+
+def get_runpod_public_url(port: int = 7860) -> str | None:
+    """Return the RunPod proxy URL for the given port, or None if not on RunPod."""
+    if RUNPOD_POD_ID is None:
+        return None
+    return f"https://{RUNPOD_POD_ID}-{port}.proxy.runpod.net"
+
+
+# Ollama — env override for Docker Compose (OLLAMA_BASE_URL) or RunPod (localhost)
+OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = "navigator"
+
+# RunPod: persist Ollama models on /workspace volume
+if IS_RUNPOD and "OLLAMA_MODELS" not in os.environ:
+    os.environ["OLLAMA_MODELS"] = "/workspace/.ollama/models"
 
 # Embeddings
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -45,7 +61,6 @@ SUPPORTED_LANGUAGES = {
     "es": "Spanish",
     "hmn": "Hmong",
     "so": "Somali",
-    "kar": "Karen",
 }
 
 # Ensure data directories exist

@@ -1,10 +1,11 @@
 """Modal deployment for NorthStar Navigator.
 
-Serves the Gradio UI + Ollama with Gemma model on a GPU instance.
+Serves the Gradio UI + Ollama with fine-tuned Gemma 4 E4B on a GPU instance.
 
 Usage:
-    modal serve deploy/modal_app.py     # Dev mode (ephemeral URL)
-    modal deploy deploy/modal_app.py    # Production (persistent URL)
+    modal run deploy/modal_app.py        # Import model + upload ChromaDB
+    modal serve deploy/modal_app.py      # Dev mode (ephemeral URL)
+    modal deploy deploy/modal_app.py     # Production (persistent URL)
 
 Cost estimate with $60 Modal credit:
     T4 GPU: ~$0.59/hr → ~100 hours of runtime
@@ -40,6 +41,7 @@ navigator_image = (
         "ollama>=0.5.1",
         "pydantic>=2.11.3",
         "httpx>=0.28.1",
+        "fastapi>=0.115.0",
     )
     # Bake application source into the image
     .add_local_dir("src", remote_path="/app/src", copy=True)
@@ -50,6 +52,8 @@ navigator_image = (
         copy=True,
         ignore=["_temp_*", "_toc_*", "_ch13_*"],
     )
+    # Bake fine-tuned GGUF + Modelfile into image for model import
+    .add_local_dir("output/gguf/gguf", remote_path="/app/gguf", copy=True)
 )
 
 # ---------------------------------------------------------------------------
@@ -65,7 +69,7 @@ chroma_vol = modal.Volume.from_name(
 
 app = modal.App("plain-language-navigator", image=navigator_image)
 
-OLLAMA_MODEL = "gemma3:4b"
+OLLAMA_MODEL = "navigator"
 GRADIO_PORT = 7860
 MINUTES = 60
 
@@ -97,61 +101,69 @@ def _start_ollama():
 
 
 # ---------------------------------------------------------------------------
-# Main serving function: Ollama + Gradio on one GPU container
+# Main serving class: Ollama + Gradio on one GPU container
 # ---------------------------------------------------------------------------
 
-@app.function(
+@app.cls(
     gpu="T4",
     timeout=30 * MINUTES,
     scaledown_window=10 * MINUTES,
+    max_containers=1,
     volumes={
         "/root/.ollama": ollama_models_vol,
         "/app/data/chroma_db": chroma_vol,
     },
 )
-@modal.concurrent(max_inputs=10)
-@modal.web_server(port=GRADIO_PORT, startup_timeout=10 * MINUTES)
-def serve():
-    """Start Ollama, pull model if needed, then launch Gradio."""
-    import os
-    import sys
+class Navigator:
+    @modal.enter()
+    def setup(self):
+        """Pre-load everything before Modal routes traffic."""
+        import os
+        import sys
 
-    # Add src to path so navigator package is importable
-    sys.path.insert(0, "/app/src")
+        sys.path.insert(0, "/app/src")
+        os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+        os.environ["NAVIGATOR_DATA_DIR"] = "/app/data"
 
-    # Set environment for ChromaDB
-    os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+        # Start Ollama and wait for it
+        print("=== Starting Ollama ===")
+        _start_ollama()
 
-    # Override config paths for Modal container layout
-    os.environ["NAVIGATOR_DATA_DIR"] = "/app/data"
+        # Create model from GGUF if not already cached in volume
+        print(f"=== Ensuring model {OLLAMA_MODEL} is available ===")
+        check = subprocess.run(
+            ["ollama", "show", OLLAMA_MODEL],
+            capture_output=True, text=True,
+        )
+        if check.returncode != 0:
+            print("Model not cached — creating from GGUF...")
+            result = subprocess.run(
+                ["ollama", "create", OLLAMA_MODEL, "-f", "/app/gguf/Modelfile"],
+                capture_output=True, text=True, timeout=600,
+            )
+            print(f"Model create stdout: {result.stdout}")
+            if result.returncode != 0:
+                print(f"Model create error: {result.stderr}")
+                raise RuntimeError(f"Failed to create {OLLAMA_MODEL}")
+        else:
+            print(f"Model {OLLAMA_MODEL} already cached in volume")
 
-    # Start Ollama
-    _start_ollama()
+        ollama_models_vol.commit()
 
-    # Pull model if not already cached in volume
-    print(f"Ensuring model {OLLAMA_MODEL} is available...")
-    result = subprocess.run(
-        ["ollama", "pull", OLLAMA_MODEL],
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-    print(f"Model pull: {result.stdout}")
-    if result.returncode != 0:
-        print(f"Model pull error: {result.stderr}")
+        # Pre-import navigator app (triggers OllamaClient + EligibilityEngine init)
+        print("=== Importing Navigator app ===")
+        from app import demo
+        self.demo = demo
+        print("=== Setup complete — ready to serve ===")
 
-    # Commit volume so model persists across restarts
-    ollama_models_vol.commit()
+    @modal.asgi_app()
+    def serve(self):
+        """Return the Gradio ASGI app. All heavy init already done in setup()."""
+        from fastapi import FastAPI
+        import gradio as gr
 
-    # Launch Gradio
-    print("Starting Gradio UI...")
-    from app import demo
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=GRADIO_PORT,
-        share=False,
-        theme="soft",
-    )
+        self.demo.queue()
+        return gr.mount_gradio_app(FastAPI(), self.demo, path="/", root_path="")
 
 
 # ---------------------------------------------------------------------------
@@ -163,15 +175,15 @@ def serve():
     timeout=15 * MINUTES,
     volumes={"/root/.ollama": ollama_models_vol},
 )
-def pull_model(model_name: str = OLLAMA_MODEL):
-    """Pull a model into the persistent volume. Run with:
-        modal run deploy/modal_app.py::pull_model
+def import_model():
+    """Import fine-tuned GGUF into Ollama volume. Run with:
+        modal run deploy/modal_app.py::import_model
     """
     proc = _start_ollama()
 
-    print(f"Pulling {model_name}...")
+    print("Creating navigator model from GGUF...")
     result = subprocess.run(
-        ["ollama", "pull", model_name],
+        ["ollama", "create", OLLAMA_MODEL, "-f", "/app/gguf/Modelfile"],
         capture_output=True,
         text=True,
         timeout=600,
@@ -179,10 +191,10 @@ def pull_model(model_name: str = OLLAMA_MODEL):
     print(result.stdout)
     if result.returncode != 0:
         print(f"Error: {result.stderr}")
-        raise RuntimeError(f"Failed to pull {model_name}")
+        raise RuntimeError(f"Failed to create {OLLAMA_MODEL}")
 
     ollama_models_vol.commit()
-    print(f"Model {model_name} cached in volume.")
+    print(f"Model {OLLAMA_MODEL} cached in volume.")
     proc.terminate()
 
 
@@ -235,8 +247,8 @@ def upload_chroma():
 @app.local_entrypoint()
 def main():
     """Quick test: pull model + upload chroma, then print URL."""
-    print("Step 1: Pulling model into volume...")
-    pull_model.remote()
+    print("Step 1: Importing fine-tuned model into volume...")
+    import_model.remote()
     print("Step 2: Uploading ChromaDB...")
     upload_chroma.remote()
     print("Done! Deploy with: modal deploy deploy/modal_app.py")

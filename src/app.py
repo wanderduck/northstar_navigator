@@ -11,6 +11,7 @@ from navigator.intake import IntakeProcessor
 from navigator.eligibility import EligibilityEngine
 from navigator.response import ResponseGenerator
 from navigator.prompts import RESPONSE_DISCLAIMER
+from navigator.config import OLLAMA_BASE_URL, OLLAMA_MODEL
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,6 +21,26 @@ client = OllamaClient()
 intake = IntakeProcessor(client=client)
 engine = EligibilityEngine()
 generator = ResponseGenerator(client=client)
+
+
+def check_health() -> str:
+    """Check whether Ollama is running and the navigator model is loaded."""
+    import urllib.request
+    import json
+
+    try:
+        req = urllib.request.Request(f"{OLLAMA_BASE_URL}/api/tags", method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+    except Exception as exc:
+        return f"Ollama offline ({exc.__class__.__name__})"
+
+    model_names = [m.get("name", "") for m in data.get("models", [])]
+    if any(name == OLLAMA_MODEL or name.startswith(f"{OLLAMA_MODEL}:") for name in model_names):
+        return f"OK — model '{OLLAMA_MODEL}' loaded"
+
+    available = ", ".join(model_names) if model_names else "(none)"
+    return f"Model '{OLLAMA_MODEL}' not found. Available: {available}"
 
 
 def process_message(
@@ -36,7 +57,7 @@ def process_message(
         # Override reading level and language from UI settings
         profile.reading_level = ReadingLevel(reading_level)
         profile.language = {"English": "en", "Spanish": "es", "Hmong": "hmn",
-                           "Somali": "so", "Karen": "kar"}.get(language, "en")
+                           "Somali": "so"}.get(language, "en")
 
         # If missing critical info, ask follow-up
         if missing:
@@ -93,12 +114,21 @@ with gr.Blocks(
                 label="Reading Level",
             )
             language = gr.Dropdown(
-                choices=["English", "Spanish", "Hmong", "Somali", "Karen"],
+                choices=["English", "Spanish", "Hmong", "Somali"],
                 value="English",
                 label="Language",
             )
+
+            gr.Markdown("---")
+            health_status = gr.Textbox(
+                label="System Status",
+                interactive=False,
+                value="Checking...",
+            )
+            health_btn = gr.Button("Refresh Status", size="sm")
+            health_btn.click(fn=check_health, inputs=[], outputs=[health_status])
+
             gr.Markdown(
-                "---\n"
                 "*Describe your situation in your own words. "
                 "Include details like your income, household size, "
                 "county, and what kind of help you need.*"
@@ -139,14 +169,18 @@ with gr.Blocks(
         "Running locally via Ollama | Last updated: April 2026"
     )
 
+    # Run health check on UI load
+    demo.load(fn=check_health, inputs=[], outputs=[health_status])
+
 
 def main():
     """Launch the Navigator Gradio app."""
+    demo.queue()
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
-        theme=gr.themes.Soft(),
+        theme=gr.themes.Base(),
     )
 
 

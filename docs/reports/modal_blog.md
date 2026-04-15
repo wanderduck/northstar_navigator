@@ -180,6 +180,7 @@ This is the pattern we used for NorthStar Navigator — QLoRA fine-tuning Gemma 
 ```python
 """
 modal_finetune.py — Run with: modal run modal_finetune.py
+
 Prerequisites:
     modal secret create huggingface HF_TOKEN=hf_your_token_here
 """
@@ -214,11 +215,11 @@ vol = modal.Volume.from_name("finetune-output", create_if_missing=True)
     volumes={"/output": vol},
     secrets=[modal.Secret.from_name("huggingface")],
 )
+
 def finetune(dataset_path: str = "/data/training.jsonl"):
     """QLoRA fine-tune on A100. Saves adapters to persistent Volume."""
     import json
     import os
-
     import torch
     from datasets import Dataset
     from peft import LoraConfig, get_peft_model
@@ -238,6 +239,7 @@ def finetune(dataset_path: str = "/data/training.jsonl"):
         dtype=torch.bfloat16,
         token=hf_token,
     )
+    
     tokenizer = AutoTokenizer.from_pretrained(model_name, token=hf_token)
 
     # Apply LoRA
@@ -247,6 +249,7 @@ def finetune(dataset_path: str = "/data/training.jsonl"):
                         "gate_proj", "up_proj", "down_proj"],
         lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
     )
+    
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
@@ -256,6 +259,7 @@ def finetune(dataset_path: str = "/data/training.jsonl"):
         for line in f:
             if line.strip():
                 records.append(json.loads(line))
+                
     dataset = Dataset.from_dict({"messages": [r["messages"] for r in records]})
 
     # Train
@@ -317,7 +321,6 @@ modal_web_server.py
 """
 import subprocess
 import time
-
 import modal
 
 app = modal.App("gpu-web-app")
@@ -381,6 +384,7 @@ def serve():
         title="NorthStar Navigator",
         description=f"Powered by {MODEL_TAG} on Modal T4 GPU",
     )
+    
     demo.launch(
         server_name="0.0.0.0",  # Must bind 0.0.0.0, not localhost
         server_port=PORT,
@@ -405,7 +409,7 @@ NorthStar Navigator is a plain-language government benefits navigator that helps
 
 Gemma 4 uses a custom `Gemma4ClippableLinear` layer that extends `nn.Module` instead of `nn.Linear`. PEFT's LoRA injection finds target layers via `isinstance(module, nn.Linear)` — so it silently skips every attention and MLP layer. Zero trainable parameters. No error message.
 
-The fix is ugly but works: load the model first, then monkey-patch `__bases__` on the ClippableLinear class to include `nn.Linear`, and add property delegates for `weight`, `bias`, `in_features`, and `out_features` pointing to `self.linear.*`. It has to happen *after* model loading — vision tower components call `ClippableLinear(config)` during construction, and `nn.Linear.__init__` expects `(in_features, out_features)`.
+The fix is ugly but works: load the model first, then monkey-patch `__bases__` on the `ClippableLinear` class to include `nn.Linear`, and add property delegates for `weight`, `bias`, `in_features`, and `out_features` pointing to `self.linear.*`. It has to happen *after* model loading — vision tower components call `ClippableLinear(config)` during construction, and `nn.Linear.__init__` expects `(in_features, out_features)`.
 
 If you're using Unsloth, it handles this internally. If you're using raw PEFT + TRL, you need the patch.
 

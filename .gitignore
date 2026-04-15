@@ -8,6 +8,7 @@
 # IPython
 profile_default/
 ipython_config.py
+sample.ipynb
 
 
 ### Python template
@@ -44,7 +45,13 @@ cython_debug/
 
 runpod
 runpod.pub
+runpodctl
 
 data/
 output/
 .playwright-mcp/
+
+gen-lang-client-0685342464-c171ba59f0e9.json
+
+docs/outputs/*
+docs/conversation/*
