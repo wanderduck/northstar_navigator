@@ -1,0 +1,72 @@
+# NorthStar Navigator — Local Development Stack
+#
+# Replicates the RunPod deployment locally for testing.
+# Requires: Docker with NVIDIA Container Toolkit (nvidia-docker2)
+#
+# Usage (from project root):
+#   docker compose -f deploy/runpod/docker-compose.yml up --build
+#
+#   Gradio UI:  http://localhost:7860
+#   Ollama API: http://localhost:11434
+#
+# No GPU? Remove the deploy.resources block and Ollama will use CPU (slow but functional).
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: navigator-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+      - ../../output/gguf/gguf:/models:ro
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+    networks:
+      - navigator-net
+
+  navigator:
+    build:
+      context: ../..
+      dockerfile: deploy/runpod/Dockerfile
+    container_name: navigator-app
+    ports:
+      - "7860:7860"
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../data/programs:/app/data/programs:ro
+      - ../../data/raw/dhs_combined_manual:/app/data/raw/dhs_combined_manual:ro
+      - chroma_data:/app/data/chroma_db
+    environment:
+      - NAVIGATOR_DATA_DIR=/app/data
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+      - PYTHONPATH=/app/src
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - navigator-net
+    # Override entrypoint: in compose, Ollama runs as separate service
+    command: ["python", "src/app.py"]
+
+volumes:
+  ollama_models:
+  chroma_data:
+
+networks:
+  navigator-net:
+    driver: bridge
