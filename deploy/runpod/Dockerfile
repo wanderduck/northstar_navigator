@@ -1,8 +1,6 @@
 # NorthStar Navigator — RunPod Deployment Dockerfile
 #
-# Backup/reproducibility image for RunPod GPU pods.
-# Primary deployment uses bare CUDA + setup.sh scripts;
-# this Dockerfile exists for custom image builds and CI/CD.
+# Backup/reproducibility image. Primary deployment uses setup.sh scripts.
 #
 # Build (from project root):
 #   docker build --platform=linux/amd64 -t wanderduck/northstar-navigator:v0.1.0 -f deploy/runpod/Dockerfile .
@@ -10,26 +8,9 @@
 # IMPORTANT:
 #   - Always build with --platform=linux/amd64 (RunPod runs x86_64 Linux)
 #   - Always use a versioned tag (e.g. v0.1.0), never :latest
-#   - GGUF model weights are NOT baked in (5.3GB) — downloaded at runtime from HF Hub
+#   - GGUF model weights NOT baked in (5.3GB) — downloaded at runtime via hf CLI
 
-# CUDA 12.1 for broad RunPod driver compatibility (12.6 fails on older drivers)
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# System deps + Python 3.13 from deadsnakes PPA
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl zstd ca-certificates software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        python3.13 python3.13-venv python3.13-dev && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 && \
-    python3.13 -m ensurepip --upgrade && \
-    python3.13 -m pip install --no-cache-dir --upgrade pip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 
 # Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
@@ -45,14 +26,15 @@ RUN pip install --no-cache-dir \
     "pydantic>=2.11.3" \
     "httpx>=0.28.1" \
     "fastapi>=0.115.0" \
-    "huggingface-hub>=0.30.0"
+    "huggingface_hub[cli]>=0.30.0"
 
 WORKDIR /app
 
-# Application code
+# Application code + icon
 COPY src/ /app/src/
 COPY data/programs/ /app/data/programs/
 COPY data/raw/dhs_combined_manual/ /app/data/raw/dhs_combined_manual/
+COPY notebook_images/ /app/notebook_images/
 
 # Startup script
 COPY deploy/runpod/start.sh /app/start.sh

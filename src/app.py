@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Generator
+from pathlib import Path
 
 import gradio as gr
 
@@ -11,10 +12,12 @@ from navigator.intake import IntakeProcessor
 from navigator.eligibility import EligibilityEngine
 from navigator.response import ResponseGenerator
 from navigator.prompts import RESPONSE_DISCLAIMER
-from navigator.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+from navigator.config import OLLAMA_BASE_URL, OLLAMA_MODEL, PROJECT_ROOT
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+ICON_PATH = PROJECT_ROOT / "notebook_images" / "NorthStar_Navigator_icon.png"
 
 # Initialize components
 client = OllamaClient()
@@ -99,10 +102,20 @@ def _format_sources(benefits_response) -> str:
 with gr.Blocks(
     title="NorthStar Navigator",
 ) as demo:
-    gr.Markdown(
-        "# NorthStar Navigator\n"
-        "*Powered by Gemma 4 via Ollama - Your data never leaves this device*"
-    )
+    with gr.Row(equal_height=True):
+        if ICON_PATH.exists():
+            gr.Image(
+                value=str(ICON_PATH),
+                width=80,
+                height=80,
+                show_label=False,
+                container=False,
+                interactive=False,
+            )
+        gr.Markdown(
+            "# NorthStar Navigator\n"
+            "*Powered by Gemma 4 via Ollama - Your data never leaves this device*"
+        )
 
     with gr.Row():
         # Left sidebar

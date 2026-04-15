@@ -77,25 +77,19 @@ if [[ -f "$GGUF_DIR/$GGUF_FILE" ]]; then
     echo "      Already exists: $GGUF_DIR/$GGUF_FILE ($(du -h "$GGUF_DIR/$GGUF_FILE" | cut -f1))"
 else
     if ! command -v hf &>/dev/null; then
-        pip install -q huggingface_hub[cli]
+        pip install -q "huggingface_hub[cli]"
     fi
 
     mkdir -p "$GGUF_DIR"
     echo "      Downloading $HF_REPO ..."
-    hf download "$HF_REPO" "$GGUF_FILE" --local-dir "$GGUF_DIR"
+    hf download "$HF_REPO" "$GGUF_FILE" Modelfile --local-dir "$GGUF_DIR"
     echo "      Done: $(du -h "$GGUF_DIR/$GGUF_FILE" | cut -f1)"
 fi
 
-# Create Modelfile if not present
+# Modelfile is downloaded from HF Hub alongside the GGUF
 if [[ ! -f "$MODELFILE_PATH" ]]; then
-    echo "      Creating Modelfile ..."
-    cat > "$MODELFILE_PATH" <<'MODELFILE'
-FROM ./model-q4_k_m.gguf
-PARAMETER temperature 1.0
-PARAMETER top_p 0.95
-PARAMETER num_ctx 2048
-SYSTEM "You are NorthStar Navigator, a plain-language government benefits navigator for Minnesota. You help people understand which government assistance programs they may be eligible for based on their situation. You speak English, Spanish, Hmong, and Somali. Respond in the same language the user writes in. Be warm, clear, and actionable. Always cite specific eligibility thresholds and application portals. Never say someone "qualifies" — say "may be eligible." End every response with a disclaimer that this is informational, not legal advice."
-MODELFILE
+    echo "[error] Modelfile not found at $MODELFILE_PATH — hf download may have failed"
+    exit 1
 fi
 
 # ── Step 5: Create Ollama model ───────────────────────────────────────────────

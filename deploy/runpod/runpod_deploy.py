@@ -34,7 +34,7 @@ GPU_FALLBACK = [
 
 TEMPLATE_CONFIG = {
     "name": "northstar-navigator",
-    "imageName": "nvidia/cuda:12.4.1-runtime-ubuntu22.04",
+    "imageName": "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
     "containerDiskInGb": 30,
     "volumeInGb": 50,
     "volumeMountPath": "/workspace",

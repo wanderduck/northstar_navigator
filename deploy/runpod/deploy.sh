@@ -13,7 +13,7 @@ set -euo pipefail
 # ── Defaults ──────────────────────────────────────────────────────────────────
 POD_NAME="northstar-navigator"
 GPU_TYPE="${RUNPOD_GPU:-NVIDIA GeForce RTX 4090}"
-IMAGE="nvidia/cuda:12.4.1-runtime-ubuntu22.04"
+IMAGE="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"
 CONTAINER_DISK_GB=30
 VOLUME_DISK_GB=50
 VOLUME_MOUNT="/workspace"
