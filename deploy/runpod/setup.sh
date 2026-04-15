@@ -76,13 +76,13 @@ echo "[4/7] Downloading GGUF model from HuggingFace Hub ..."
 if [[ -f "$GGUF_DIR/$GGUF_FILE" ]]; then
     echo "      Already exists: $GGUF_DIR/$GGUF_FILE ($(du -h "$GGUF_DIR/$GGUF_FILE" | cut -f1))"
 else
-    if ! command -v huggingface-cli &>/dev/null; then
+    if ! command -v hf &>/dev/null; then
         pip install -q huggingface_hub[cli]
     fi
 
     mkdir -p "$GGUF_DIR"
     echo "      Downloading $HF_REPO ..."
-    huggingface-cli download "$HF_REPO" "$GGUF_FILE" --local-dir "$GGUF_DIR"
+    hf download "$HF_REPO" "$GGUF_FILE" --local-dir "$GGUF_DIR"
     echo "      Done: $(du -h "$GGUF_DIR/$GGUF_FILE" | cut -f1)"
 fi
 

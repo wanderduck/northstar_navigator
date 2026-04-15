@@ -47,19 +47,16 @@ cython_debug/
 runpod.pub
 runpodctl
 
-data/
 output/
+data/
 .playwright-mcp/
 
 gen-lang-client-0685342464-c171ba59f0e9.json
 
-docs/outputs/*
-docs/conversation/*
-docs/outputs/error02.txt
-docs/outputs/error02.txt
-docs/outputs/error03.txt
-docs/outputs/error04.txt
-/docs/outputs
-docs/outputs/error05.txt
+
+docs/conversation
 /docs/reports/runpod_sections
 /docs/outputs
+
+/home/wanderduck/000_Duckspace/WanderduckDevelopment/Ducks/Kaggle/Gemma4-GoodHackathon/.claude/worktrees/navigator-implementation/runpod**
+runpod

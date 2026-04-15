@@ -5,6 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/models" />
+      <excludeFolder url="file://$MODULE_DIR$/data/chroma_db/b1617c80-3492-42be-b1f1-9d9c0069be02" />
+      <excludeFolder url="file://$MODULE_DIR$/data/processed" />
+      <excludeFolder url="file://$MODULE_DIR$/data/raw/sam_gov" />
+      <excludeFolder url="file://$MODULE_DIR$/data/training/generated_training_data" />
+      <excludeFolder url="file://$MODULE_DIR$/docs/reports/runpod_sections" />
+      <excludeFolder url="file://$MODULE_DIR$/output" />
     </content>
     <orderEntry type="jdk" jdkName="uv (Gemma4-GoodHackathon)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
