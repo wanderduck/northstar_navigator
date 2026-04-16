@@ -13,6 +13,8 @@ from navigator.eligibility import EligibilityEngine
 from navigator.response import ResponseGenerator
 from navigator.prompts import RESPONSE_DISCLAIMER
 from navigator.config import OLLAMA_BASE_URL, OLLAMA_MODEL, PROJECT_ROOT
+from navigator.translations import TRANSLATIONS, LANG_MAP, get_text
+
 
 def _setup_logging():
     """Configure logging with file output when running on RunPod."""
@@ -28,10 +30,12 @@ def _setup_logging():
         handlers=handlers,
     )
 
+
 _setup_logging()
 logger = logging.getLogger(__name__)
 
-ICON_PATH = PROJECT_ROOT / "docs" / "Styling" / "NorthStar_Navigator_icon.png"
+# Improvement #9: Use the small, properly cropped icon
+ICON_PATH = PROJECT_ROOT / "docs" / "Styling" / "NorthStar_Navigator_icon_small.png"
 
 # Initialize components
 client = OllamaClient()
@@ -39,6 +43,65 @@ intake = IntakeProcessor(client=client)
 engine = EligibilityEngine()
 generator = ResponseGenerator(client=client)
 
+# ── Persistent text (never changes with language selection) ─────────────────
+
+# Improvement #2: Prompt instruction tip in all 4 languages, persistent
+PROMPT_TIP_HTML = (
+    '<div style="padding:8px 0;">'
+    '<p style="font-size:1.15em;font-weight:bold;font-style:italic;color:#EC7E78;line-height:1.5;">'
+    'Describe your situation in your own words. '
+    'Include details like your income, household size, '
+    'county, and what kind of help you need.'
+    '</p>'
+    '<p style="font-size:1.15em;font-weight:bold;font-style:italic;color:#EC7E78;line-height:1.5;">'
+    'Describa su situación con sus propias palabras. '
+    'Incluya detalles como sus ingresos, el tamaño de su hogar, '
+    'su condado y qué tipo de ayuda necesita.'
+    '</p>'
+    '<p style="font-size:1.15em;font-weight:bold;font-style:italic;color:#EC7E78;line-height:1.5;">'
+    'Piav qhia koj qhov xwm txheej ntawm koj tus kheej cov lus. '
+    'Suav nrog cov ntsiab lus zoo li koj cov nyiaj tau los, '
+    'tsev neeg loj npaum li cas, lub nroog, thiab koj xav tau kev pab dab tsi.'
+    '</p>'
+    '<p style="font-size:1.15em;font-weight:bold;font-style:italic;color:#EC7E78;line-height:1.5;">'
+    'Ku sharax xaaladaada oo isticmaal erayadaada. '
+    'Ku dar faahfaahin sida dakhligaaga, tirada qoyskaaga, '
+    'degmada, iyo nooca caawimada aad u baahan tahay.'
+    '</p>'
+    '</div>'
+)
+
+# Improvement #3: Four examples, one per language (persistent prompt text)
+EXAMPLES = [
+    [
+        "I'm a single mom with two kids, ages 3 and 7. I just got laid off "
+        "from my warehouse job where I made $32,000. We're in Ramsey County "
+        "and I'm worried about paying rent and feeding my kids.",
+        "standard",
+        "English",
+    ],
+    [
+        "Soy madre soltera con dos hijos. Perdí mi trabajo y necesito ayuda "
+        "con comida y alquiler. Vivo en el condado de Dakota.",
+        "standard",
+        "Spanish",
+    ],
+    [
+        "Kuv yog ib tug neeg laus nyob hauv Hennepin County. "
+        "Kuv xav tau kev pab them nqi cua sov rau lub caij ntuj no.",
+        "standard",
+        "Hmong",
+    ],
+    [
+        "Waxaan ahay qof qoys ah oo degan Ramsey County. "
+        "Waxaan u baahanahay cunto caawimaad ah carruurta.",
+        "standard",
+        "Somali",
+    ],
+]
+
+
+# ── Health check ────────────────────────────────────────────────────────────
 
 def check_health() -> str:
     """Check whether Ollama is running and the navigator model is loaded."""
@@ -60,6 +123,8 @@ def check_health() -> str:
     return f"Model '{OLLAMA_MODEL}' not found. Available: {available}"
 
 
+# ── Chat pipeline ───────────────────────────────────────────────────────────
+
 def process_message(
     message: str,
     history: list[dict],
@@ -68,32 +133,26 @@ def process_message(
 ) -> Generator[str, None, None]:
     """Process a user message through the Navigator pipeline (streaming)."""
     try:
-        # Stage 1: Extract profile
         yield "Analyzing your situation..."
         profile, missing = intake.extract(message)
 
-        # Override reading level and language from UI settings
         profile.reading_level = ReadingLevel(reading_level)
         profile.language = {"English": "en", "Spanish": "es", "Hmong": "hmn",
                            "Somali": "so"}.get(language, "en")
 
-        # If missing critical info, ask follow-up
         if missing:
             yield intake.ask_followup(missing)
             return
 
-        # Stage 2: Determine eligibility
         yield "Finding programs you may be eligible for..."
         benefits_response = engine.evaluate(profile)
 
-        # Stage 3: Stream plain-language response
         sources = _format_sources(benefits_response)
         suffix = f"\n\n---\n**Sources & Reasoning**\n{sources}" if sources else ""
 
         for partial in generator.generate_stream(benefits_response, profile):
             yield partial
 
-        # Append sources after streaming completes
         if suffix:
             yield partial + suffix
 
@@ -116,86 +175,157 @@ def _format_sources(benefits_response) -> str:
     return "\n".join(lines)
 
 
-# Build the Gradio interface
-with gr.Blocks(
-    title="NorthStar Navigator",
-) as demo:
-    gr.HTML(
-        value=f'<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">'
+# ── Language change handler ─────────────────────────────────────────────────
+
+def _build_title_html(lang_code: str) -> str:
+    """Build the header HTML with conditional translated subtitle."""
+    translation_line = get_text("title_translation", lang_code)
+    subtitle = f'<p style="margin:0;font-size:1.1em;opacity:0.8;">{translation_line}</p>' if translation_line else ""
+    security_text = get_text("data_security", lang_code)
+    powered_text = get_text("powered_by", lang_code)
+
+    return (
+        f'<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">'
         f'<img src="/file={ICON_PATH}" style="height:56px;width:auto;" alt="NorthStar Navigator">'
-        f'<div><h1 style="margin:0;font-size:1.8em;">NorthStar Navigator</h1>'
-        f'<p style="margin:2px 0 0;opacity:0.7;font-style:italic;">Powered by Gemma 4 via Ollama &mdash; Your data never leaves this device</p></div>'
-        f'</div>',
+        f'<div>'
+        f'<h1 style="margin:0;font-size:1.8em;color:#3E5E80;">NorthStar Navigator</h1>'
+        f'{subtitle}'
+        f'<p style="margin:2px 0 0;opacity:0.7;font-style:italic;">'
+        f'{powered_text} &mdash; {security_text}</p>'
+        f'</div></div>'
     )
 
+
+def _build_settings_heading(lang_code: str) -> str:
+    return f'<h3 style="color:#64AD9A;margin:0;">{get_text("settings", lang_code)}</h3>'
+
+
+def _build_reading_level_heading(lang_code: str) -> str:
+    return f'<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">{get_text("reading_level_heading", lang_code)}</p>'
+
+
+def _build_language_heading(_lang_code: str = "en") -> str:
+    # Persistent — always shows all four languages
+    return '<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">Language/Idioma/Lus/Luqadda</p>'
+
+
+def _build_system_status_heading(lang_code: str) -> str:
+    return f'<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">{get_text("system_status", lang_code)}</p>'
+
+
+def _build_examples_heading(lang_code: str) -> str:
+    return f'<h3 style="color:#64AD9A;margin:8px 0 4px;">{get_text("examples_heading", lang_code)}</h3>'
+
+
+def _build_footer(lang_code: str) -> str:
+    running = get_text("footer_running", lang_code)
+    updated = get_text("footer_updated", lang_code)
+    return f"---\n*{RESPONSE_DISCLAIMER}*\n\n{running} | {updated}"
+
+
+def on_language_change(language: str):
+    """Update all translatable UI components when language changes."""
+    lang_code = LANG_MAP.get(language, "en")
+    return (
+        _build_title_html(lang_code),
+        _build_settings_heading(lang_code),
+        _build_reading_level_heading(lang_code),
+        _build_language_heading(lang_code),
+        _build_system_status_heading(lang_code),
+        get_text("refresh_status", lang_code),
+        _build_examples_heading(lang_code),
+        _build_footer(lang_code),
+    )
+
+
+# ── Build the Gradio interface ──────────────────────────────────────────────
+
+with gr.Blocks(
+    title="NorthStar Navigator",
+    css="""
+        .chatbot-container { height: 777px !important; }
+        .chatbot-container .messages { height: 100% !important; }
+    """,
+) as demo:
+
+    # Improvement #4 + #5 + #9: Title with icon, color, conditional translation
+    title_html = gr.HTML(value=_build_title_html("en"))
+
     with gr.Row():
-        # Left sidebar
+        # ── Left sidebar ────────────────────────────────────────────────
         with gr.Column(scale=1):
-            gr.Markdown("### Settings")
+            # Improvement #8: Headings in Duck Green
+            settings_heading = gr.HTML(value=_build_settings_heading("en"))
+
+            # Improvement #6 (B approach): Markdown heading replaces component label
+            reading_level_heading = gr.HTML(value=_build_reading_level_heading("en"))
             reading_level = gr.Radio(
                 choices=["simple", "standard", "detailed"],
                 value="standard",
-                label="Reading Level",
+                label="",  # Hidden — replaced by heading above
+                show_label=False,
             )
+
+            language_heading = gr.HTML(value=_build_language_heading("en"))
             language = gr.Dropdown(
                 choices=["English", "Spanish", "Hmong", "Somali"],
                 value="English",
-                label="Language",
+                label="",
+                show_label=False,
             )
 
-            gr.Markdown("---")
+            gr.HTML(value='<hr style="border-color:#264660;margin:8px 0;">')
+
+            system_status_heading = gr.HTML(value=_build_system_status_heading("en"))
             health_status = gr.Textbox(
-                label="System Status",
+                label="",
+                show_label=False,
                 interactive=False,
                 value="Checking...",
             )
-            health_btn = gr.Button("Refresh Status", size="sm")
-            health_btn.click(fn=check_health, inputs=[], outputs=[health_status])
+            refresh_btn = gr.Button("Refresh Status", size="sm")
+            refresh_btn.click(fn=check_health, inputs=[], outputs=[health_status])
 
-            gr.Markdown(
-                "*Describe your situation in your own words. "
-                "Include details like your income, household size, "
-                "county, and what kind of help you need.*"
-            )
+            # Improvement #2: Persistent prompt tip in 4 languages
+            gr.HTML(value=PROMPT_TIP_HTML)
 
-        # Main chat area
+        # ── Main chat area ──────────────────────────────────────────────
         with gr.Column(scale=3):
+            # Improvement #3: Examples heading (translatable)
+            examples_heading = gr.HTML(value=_build_examples_heading("en"))
+
+            # Improvement #7: Chatbot height 777px via elem_classes
             chatbot = gr.ChatInterface(
                 fn=process_message,
                 additional_inputs=[reading_level, language],
-                # When additional_inputs are provided, examples must be lists:
-                # [message, reading_level_value, language_value]
-                examples=[
-                    [
-                        "I'm a single mom with two kids, ages 3 and 7. I just got laid off "
-                        "from my warehouse job where I made $32,000. We're in Ramsey County "
-                        "and I'm worried about paying rent and feeding my kids.",
-                        "standard",
-                        "English",
-                    ],
-                    [
-                        "I'm a 68-year-old veteran in Hennepin County living on Social Security. "
-                        "I'm having trouble paying my heating bill this winter.",
-                        "standard",
-                        "English",
-                    ],
-                    [
-                        "Soy madre soltera con dos hijos. Perdí mi trabajo y necesito ayuda "
-                        "con comida y alquiler. Vivo en el condado de Dakota.",
-                        "standard",
-                        "Spanish",
-                    ],
-                ],
+                chatbot=gr.Chatbot(height=777, elem_classes=["chatbot-container"]),
+                examples=EXAMPLES,
             )
 
-    gr.Markdown(
-        f"---\n*{RESPONSE_DISCLAIMER}*\n\n"
-        "Running locally via Ollama | Last updated: April 2026"
+    # Footer (translatable)
+    footer_md = gr.Markdown(value=_build_footer("en"))
+
+    # ── Wire language change to update all translatable components ───────
+    language.change(
+        fn=on_language_change,
+        inputs=[language],
+        outputs=[
+            title_html,
+            settings_heading,
+            reading_level_heading,
+            language_heading,
+            system_status_heading,
+            refresh_btn,
+            examples_heading,
+            footer_md,
+        ],
     )
 
-    # Run health check on UI load
+    # Health check on page load
     demo.load(fn=check_health, inputs=[], outputs=[health_status])
 
+
+# ── Theme ───────────────────────────────────────────────────────────────────
 
 def _build_theme() -> gr.themes.Base:
     """Build a custom Gradio theme using the Wanderduck color palette."""
