@@ -197,24 +197,24 @@ def _build_title_html(lang_code: str) -> str:
 
 
 def _build_settings_heading(lang_code: str) -> str:
-    return f'<h3 style="color:#64AD9A;margin:0;">{get_text("settings", lang_code)}</h3>'
+    return f'<h3 style="color:#64AD9A;font-size:1.3em;margin:0;">{get_text("settings", lang_code)}</h3>'
 
 
 def _build_reading_level_heading(lang_code: str) -> str:
-    return f'<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">{get_text("reading_level_heading", lang_code)}</p>'
+    return f'<p style="color:#64AD9A;font-weight:bold;font-size:1.08em;margin:4px 0;">{get_text("reading_level_heading", lang_code)}</p>'
 
 
 def _build_language_heading(_lang_code: str = "en") -> str:
     # Persistent — always shows all four languages
-    return '<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">Language/Idioma/Lus/Luqadda</p>'
+    return '<p style="color:#64AD9A;font-weight:bold;font-size:1.08em;margin:4px 0;">Language/Idioma/Lus/Luqadda</p>'
 
 
 def _build_system_status_heading(lang_code: str) -> str:
-    return f'<p style="color:#64AD9A;font-weight:bold;font-size:0.95em;margin:4px 0;">{get_text("system_status", lang_code)}</p>'
+    return f'<p style="color:#64AD9A;font-weight:bold;font-size:1.08em;margin:4px 0;">{get_text("system_status", lang_code)}</p>'
 
 
 def _build_examples_heading(lang_code: str) -> str:
-    return f'<h3 style="color:#64AD9A;margin:8px 0 4px;">{get_text("examples_heading", lang_code)}</h3>'
+    return f'<h3 style="color:#64AD9A;font-size:1.3em;margin:8px 0 4px;">{get_text("examples_heading", lang_code)}</h3>'
 
 
 def _build_footer(lang_code: str) -> str:
@@ -289,11 +289,11 @@ with gr.Blocks(
             # Improvement #2: Persistent prompt tip in 4 languages
             gr.HTML(value=PROMPT_TIP_HTML)
 
-        # ── Main chat area ──────────────────────────────────────────────
-        with gr.Column(scale=3):
-            # Improvement #3: Examples heading (translatable)
+            # Improvement #3: Examples heading (translatable, below tips)
             examples_heading = gr.HTML(value=_build_examples_heading("en"))
 
+        # ── Main chat area ──────────────────────────────────────────────
+        with gr.Column(scale=3):
             # Improvement #7: Chatbot height 777px via elem_classes
             chatbot = gr.ChatInterface(
                 fn=process_message,
