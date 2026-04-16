@@ -34,8 +34,13 @@ def _setup_logging():
 _setup_logging()
 logger = logging.getLogger(__name__)
 
-# Improvement #9: Use the small, properly cropped icon
-ICON_PATH = PROJECT_ROOT / "docs" / "Styling" / "NorthStar_Navigator_icon_small.png"
+# Improvement #9: Embed icon as base64 data URI (avoids Gradio /file= path issues)
+import base64
+_icon_path = PROJECT_ROOT / "docs" / "Styling" / "NorthStar_Navigator_icon_small.png"
+ICON_DATA_URI = ""
+if _icon_path.exists():
+    _b64 = base64.b64encode(_icon_path.read_bytes()).decode()
+    ICON_DATA_URI = f"data:image/png;base64,{_b64}"
 
 # Initialize components
 client = OllamaClient()
@@ -137,8 +142,16 @@ def process_message(
         profile, missing = intake.extract(message)
 
         profile.reading_level = ReadingLevel(reading_level)
-        profile.language = {"English": "en", "Spanish": "es", "Hmong": "hmn",
-                           "Somali": "so"}.get(language, "en")
+        # Use the dropdown language if explicitly set to non-English;
+        # otherwise trust the language the model detected from the input text.
+        # This ensures non-English examples respond in the correct language
+        # even when the dropdown hasn't been updated by Gradio.
+        dropdown_lang = {"English": "en", "Spanish": "es", "Hmong": "hmn",
+                        "Somali": "so"}.get(language, "en")
+        if dropdown_lang != "en":
+            profile.language = dropdown_lang
+        elif not profile.language or profile.language == "en":
+            profile.language = dropdown_lang
 
         if missing:
             yield intake.ask_followup(missing)
@@ -186,7 +199,7 @@ def _build_title_html(lang_code: str) -> str:
 
     return (
         f'<div style="display:flex;align-items:center;gap:12px;padding:8px 0;">'
-        f'<img src="/file={ICON_PATH}" style="height:56px;width:auto;" alt="NorthStar Navigator">'
+        f'<img src="{ICON_DATA_URI}" style="height:56px;width:auto;" alt="NorthStar Navigator">'
         f'<div>'
         f'<h1 style="margin:0;font-size:1.8em;color:#3E5E80;">NorthStar Navigator</h1>'
         f'{subtitle}'
