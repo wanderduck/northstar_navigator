@@ -150,10 +150,17 @@ Navigator deps are in `[project.optional-dependencies] navigator` to avoid confl
 - NEC, AWS D1.1, IPC/UPC trade standards are copyrighted — use educational summaries and inspection checklists for RAG, not full standard text
 - Kaggle writeup: 1,500 word max (penalty for exceeding). Saved at `kaggle_writeup/kaggle_writeup.md`
 - Kaggle notebook: `northstar_navigator.ipynb` — self-contained, installs Ollama + downloads GGUF, runs on T4 GPU
+- Video script and action plan: `kaggle_writeup/video_script.md`
+- Cover image for Kaggle Media Gallery: `docs/Styling/NorthStar_Navigator_banner.png`
+- Branding assets (colors, logos, icons): `docs/Styling/`
 
 ## Key Technical Notes
 
 - Gradio 6.x: `ChatInterface` examples must be lists-of-lists when `additional_inputs` used; `theme` passed to `launch()` not `Blocks()`
+- **Gradio streaming**: Convert `fn` to generator yielding cumulative strings. Add `generate_stream()` on the service class. `ChatInterface` handles generators natively.
+- **Gradio custom theme**: Use `gr.themes.Base()` with `gr.themes.Color(c50=..., c950=...)` for hue, then `.set()` for specific overrides. Wanderduck palette defined in `docs/Styling/Wanderduck_ColourDuck_Preview.html`.
+- **Gradio header icon**: `gr.Image` adds container padding. Use `gr.HTML` with inline `<img style="height:56px">` for precise icon-beside-title alignment.
+- **Pydantic models for LLM output**: Use `field: type | None = None` for any field the LLM might not extract. Strict `int`/`str` without defaults will crash on multilingual or incomplete input.
 - Ollama must be running (`systemctl start ollama`) before launching the Gradio UI
 - `cuml.accel` is disabled due to RAPIDS cu12 vs system CUDA 13.1 header mismatch; use cuML via direct imports instead
 - The notebook preloads both cu12 and cu13 shared libraries to support TensorFlow and PyTorch simultaneously
@@ -213,6 +220,8 @@ Modal is used for cloud GPU training scripts (`deploy/modal_finetune*.py`, `depl
 - **RunPod base image**: Use `runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04` (pre-cached on RunPod nodes, avoids Docker Hub rate limits and CUDA driver mismatches). Do NOT use bare `nvidia/cuda:*` images — 12.6 fails on older drivers, 12.1 is deprecated, 12.4 hits Docker Hub pull limits.
 - **RunPod SSH**: Proxy-based — `ssh POD_ID-HASH@ssh.runpod.io` (not IP+port). Register keys first: `runpodctl ssh add-key --key-file ~/.ssh/id_ed25519.pub`
 - **HuggingFace CLI**: `huggingface-cli` is deprecated. Use `hf` instead: `hf download REPO FILE1 FILE2 --local-dir DIR`
+- **Cloudflare Tunnel**: Service must be `http://localhost:7860` (NOT `https`). Wrong protocol causes 403. Token saved at `/workspace/.cloudflare_tunnel_token`, auto-started by `start.sh`.
+- **Stable demo URL**: `https://navigator.wanderduck.dev` via Cloudflare Tunnel (survives pod recreation if same token used)
 
 ### Sub-Agent Patterns
 
