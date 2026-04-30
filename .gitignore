@@ -44,10 +44,10 @@ cython_debug/
 .idea/
 
 
-# RunPod credentials and CLI binary
-runpod
-runpod.pub
-runpodctl
+# RunPod credentials and CLI binary (repo-root only; do NOT match deploy/runpod/)
+/runpod
+/runpod.pub
+/runpodctl
 
 # Data and model weights (large, downloaded at runtime)
 output/

@@ -2,17 +2,20 @@
 # deploy/runpod/deploy.sh — Create or manage a RunPod GPU pod for NorthStar Navigator
 #
 # Usage:
-#   bash deploy/runpod/deploy.sh              # Create pod with RTX 4090
+#   bash deploy/runpod/deploy.sh              # Create pod with RTX 4090 (live demo)
 #   RUNPOD_GPU="NVIDIA L4" bash deploy/runpod/deploy.sh  # Override GPU type
 #   bash deploy/runpod/deploy.sh --help       # Show help
+#
+# For a cheaper test pod on RTX A5000, use deploy_a5000.sh.
 #
 # Requires: runpodctl (https://github.com/runpod/runpodctl)
 
 set -euo pipefail
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-POD_NAME="northstar-navigator"
+POD_NAME="${POD_NAME:-northstar-navigator}"
 GPU_TYPE="${RUNPOD_GPU:-NVIDIA GeForce RTX 4090}"
+CLOUD_TYPE="${RUNPOD_CLOUD_TYPE:-SECURE}"
 IMAGE="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"
 CONTAINER_DISK_GB=30
 VOLUME_DISK_GB=50
@@ -32,16 +35,18 @@ USAGE
   bash deploy/runpod/deploy.sh [--help]
 
 ENVIRONMENT VARIABLES
-  RUNPOD_API_KEY    RunPod API key (loaded from .env if not set)
-  RUNPOD_GPU        GPU type override (default: "NVIDIA GeForce RTX 4090")
-                    Examples: "NVIDIA L4", "NVIDIA GeForce RTX 4090"
+  RUNPOD_API_KEY     RunPod API key (loaded from .env if not set)
+  RUNPOD_GPU         GPU type override (default: "NVIDIA GeForce RTX 4090")
+                     Examples: "NVIDIA L4", "NVIDIA RTX A5000"
+  POD_NAME           Pod name override (default: "northstar-navigator")
+  RUNPOD_CLOUD_TYPE  "SECURE" or "COMMUNITY" (default: SECURE)
 
 WHAT THIS DOES
-  1. Checks for existing pod named "northstar-navigator"
+  1. Checks for existing pod with the configured POD_NAME
   2. If found, offers to start or delete it
   3. If not found, creates a new pod with:
-     - GPU: RTX 4090 (24GB VRAM, ~$0.44/hr) or override
-     - Image: nvidia/cuda:12.6.3-runtime-ubuntu22.04
+     - GPU: RTX 4090 on Secure Cloud (or override)
+     - Image: runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
      - Container disk: 30GB, Volume: 50GB at /workspace
      - Ports: 7860 (Gradio), 11434 (Ollama), 22 (SSH)
   4. Prints pod URL and next steps
@@ -51,8 +56,9 @@ AFTER CREATION
     bash setup.sh   # First-time setup (in /workspace/navigator/deploy/runpod/)
     bash start.sh   # Start services
 
-COST
-  RTX 4090: ~$0.44/hr (~$10.50/day)
+COST (Secure Cloud, approximate)
+  RTX 4090: ~$0.69/hr — primary live-demo GPU (this script's default)
+  RTX A5000: ~$0.36/hr — cheaper testing GPU (use deploy_a5000.sh)
   Stop the pod when not in use to avoid charges.
 HELP
     exit 0
@@ -136,6 +142,7 @@ echo ""
 echo "[...] Creating RunPod pod:"
 echo "      Name:           $POD_NAME"
 echo "      GPU:            $GPU_TYPE"
+echo "      Cloud:          $CLOUD_TYPE"
 echo "      Image:          $IMAGE"
 echo "      Container disk: ${CONTAINER_DISK_GB}GB"
 echo "      Volume:         ${VOLUME_DISK_GB}GB at $VOLUME_MOUNT"
@@ -145,6 +152,7 @@ echo ""
 runpodctl pod create \
     --name "$POD_NAME" \
     --gpu-id "$GPU_TYPE" \
+    --cloud-type "$CLOUD_TYPE" \
     --image "$IMAGE" \
     --container-disk-in-gb "$CONTAINER_DISK_GB" \
     --volume-in-gb "$VOLUME_DISK_GB" \

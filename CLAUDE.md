@@ -31,8 +31,14 @@ PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python uv run python src/app.py  # Launch
 
 ### RunPod Deployment (Primary)
 
+Two deploy entry points — they create separately-named pods that can coexist:
+- `deploy.sh` → live-demo pod `northstar-navigator` on RTX 4090 (~$0.69/hr Secure)
+- `deploy_a5000.sh` → testing pod `northstar-navigator-test` on RTX A5000 (~$0.36/hr Secure, ~48% cheaper)
+
 ```bash
-bash deploy/runpod/deploy.sh                         # Create pod (RTX 4090, or RUNPOD_GPU="NVIDIA L4" for fallback)
+bash deploy/runpod/deploy.sh                         # Create live-demo pod (RTX 4090)
+bash deploy/runpod/deploy_a5000.sh                   # Create testing pod (RTX A5000) — separate pod, leaves 4090 untouched
+RUNPOD_GPU="NVIDIA L4" bash deploy/runpod/deploy.sh  # Fallback GPU override
 python deploy/runpod/runpod_deploy.py create          # Alternative: Python API with GPU fallback chain
 python deploy/runpod/runpod_deploy.py list             # List pods
 python deploy/runpod/runpod_deploy.py stop <pod_id>    # Stop pod (preserves /workspace)
@@ -125,7 +131,7 @@ PYTHONPATH=src uv run python scripts/scrape_dhs_manual.py   # Uses saved cookies
 - `src/app.py` — Gradio UI entry point
 - `scripts/` — Data scraping and ingestion scripts
 - `training/` — Unsloth fine-tuning and GGUF export
-- `deploy/runpod/` — **Primary deployment** (Pod with RTX 4090, setup.sh + start.sh scripts, Dockerfile backup)
+- `deploy/runpod/` — **Primary deployment** (RTX 4090 live-demo pod via `deploy.sh`, RTX A5000 testing pod via `deploy_a5000.sh`, plus setup.sh + start.sh, Dockerfile backup)
 - `deploy/` — Modal cloud GPU scripts (fine-tuning, training data generation, multilingual LoRA)
 - `deploy/huggingface/` — HuggingFace Spaces deployment (Docker SDK, paused)
 - `kaggle_writeup/` — Competition writeup (kaggle_writeup.md)
@@ -197,7 +203,7 @@ Modal is used for cloud GPU training scripts (`deploy/modal_finetune*.py`, `depl
 **IMPORTANT: ALWAYS read `docs/reports/runpod_manual.md` before writing ANY RunPod code.**
 
 - **RunPod documentation manual**: `docs/reports/runpod_manual.md` — comprehensive reference covering all RunPod services (Pods, Serverless, Flash SDK, CLI, API, storage, GPU types, Hub, tutorials, and Navigator-specific deployment guide)
-- **Recommended deployment**: Pod with RTX 4090 ($0.44/hr, 24GB VRAM), L4 fallback ($0.24/hr). Ports 7860/http + 11434/http + 22/tcp, `OLLAMA_HOST=0.0.0.0`
+- **Recommended deployment** (Secure Cloud): RTX 4090 (~$0.69/hr, 24GB VRAM) for the live-demo pod via `deploy.sh`; RTX A5000 (~$0.36/hr, 24GB VRAM, ~25-30% slower tokens/sec) for the separate testing pod via `deploy_a5000.sh`. L4 fallback (~$0.43/hr) via `RUNPOD_GPU=` env override. Ports 7860/http + 11434/http + 22/tcp, `OLLAMA_HOST=0.0.0.0`. Cloud type defaults to SECURE; override with `RUNPOD_CLOUD_TYPE=COMMUNITY`.
 - **Pod URL pattern**: `https://[POD_ID]-[PORT].proxy.runpod.net`
 - **No Docker Compose on Pods** — Ollama and Gradio run as co-located processes
 - **HTTP proxy 100-second Cloudflare timeout** — long requests need WebSocket/polling
@@ -208,7 +214,8 @@ Modal is used for cloud GPU training scripts (`deploy/modal_finetune*.py`, `depl
 - **Network volumes**: $0.07/GB/month, mount at `/workspace`, can only grow never shrink
 - **Pods with network volumes can only be terminated, not stopped** — data persists in volume
 - **Deployment tooling**: `deploy/runpod/` directory:
-  - `deploy.sh` — Pod creation via runpodctl (RTX 4090 primary, L4 fallback via RUNPOD_GPU env var)
+  - `deploy.sh` — Live-demo pod creation via runpodctl (RTX 4090 default, Secure Cloud, pod name `northstar-navigator`). `RUNPOD_GPU`, `POD_NAME`, and `RUNPOD_CLOUD_TYPE` env vars override the defaults.
+  - `deploy_a5000.sh` — Testing pod wrapper (RTX A5000, pod name `northstar-navigator-test`). Thin wrapper that exports `RUNPOD_GPU`/`POD_NAME` then execs `deploy.sh`. Coexists with the 4090 live-demo pod.
   - `setup.sh` — First-run idempotent setup (Ollama, GGUF from HF Hub, Python deps, source code)
   - `start.sh` — Idempotent service launcher (Ollama bg + Gradio fg, run on every pod start)
   - `runpod_deploy.py` — Python REST API automation (create/start/stop/status/delete/list subcommands)
