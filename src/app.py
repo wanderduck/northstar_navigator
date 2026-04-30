@@ -160,8 +160,9 @@ def process_message(
         yield "Finding programs you may be eligible for..."
         benefits_response = engine.evaluate(profile)
 
-        sources = _format_sources(benefits_response)
-        suffix = f"\n\n---\n**Sources & Reasoning**\n{sources}" if sources else ""
+        sources_heading = get_text("sources_heading", profile.language)
+        sources = _format_sources(benefits_response, profile.language)
+        suffix = f"\n\n---\n**{sources_heading}**\n{sources}" if sources else ""
 
         for partial in generator.generate_stream(benefits_response, profile):
             yield partial
@@ -179,12 +180,13 @@ def process_message(
         )
 
 
-def _format_sources(benefits_response) -> str:
-    """Format the sources accordion content."""
+def _format_sources(benefits_response, lang_code: str = "en") -> str:
+    """Format the sources accordion content in the appropriate language."""
+    source_label = get_text("source_label", lang_code)
     lines = []
     for r in benefits_response.eligible_programs:
         if r.source:
-            lines.append(f"- **{r.program_name}**: {r.reason} (Source: {r.source})")
+            lines.append(f"- **{r.program_name}**: {r.reason} ({source_label}: {r.source})")
     return "\n".join(lines)
 
 

@@ -39,6 +39,10 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         ),
         "example_prompt_header": "Example Prompt",
 
+        # Sources section (appended to model response)
+        "sources_heading": "Sources & Reasoning",
+        "source_label": "Source",
+
         # Footer
         "footer_running": "Running locally via Ollama",
         "footer_updated": "Last updated: April 2026",
@@ -60,7 +64,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "mientras esta ventana esté abierta"
         ),
 
-        "title_translation": "(Navegador NorthStar)",
+        "title_translation": "(Navegador Estrella del Norte)",
 
         "powered_by": "Impulsado por Gemma 4 a través de Ollama",
 
@@ -70,6 +74,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "y responde el Navegador."
         ),
         "example_prompt_header": "Ejemplo de consulta",
+
+        "sources_heading": "Fuentes y Razonamiento",
+        "source_label": "Fuente",
 
         "footer_running": "Ejecutando localmente a través de Ollama",
         "footer_updated": "Última actualización: abril 2026",
@@ -91,7 +98,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "kev pab cuam no thiab tsuas muaj thaum lub qhov rais no qhib xwb"
         ),
 
-        "title_translation": "(NorthStar Tus Coj Qhia)",
+        "title_translation": "(Lub Hnub Qub Qaum Teb Tus Coj Qhia)",
 
         "powered_by": "Siv Gemma 4 los ntawm Ollama",
 
@@ -101,6 +108,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "Qhia ua haujlwm thiab teb li cas."
         ),
         "example_prompt_header": "Piv Txwv Lus Nug",
+
+        "sources_heading": "Cov Chaw Qhia thiab Laj Txheej Xav",
+        "source_label": "Qhov Chaw",
 
         "footer_running": "Khiav hauv zos los ntawm Ollama",
         "footer_updated": "Hloov tshiab zaum kawg: Plaub Hlis 2026",
@@ -122,7 +132,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "kaliya inta daaqadani furan tahay"
         ),
 
-        "title_translation": "(Hagaha NorthStar)",
+        "title_translation": "(Hagaha Xiddigta Woqooyi)",
 
         "powered_by": "Waxaa ku shaqeeya Gemma 4 iyada oo loo marayo Ollama",
 
@@ -132,6 +142,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
             "shaqeeyo oo uu ugu jawaabo."
         ),
         "example_prompt_header": "Tusaale Fariimo",
+
+        "sources_heading": "Ilaha iyo Sababta",
+        "source_label": "Isha",
 
         "footer_running": "Ku socda maxalli ahaan iyada oo loo marayo Ollama",
         "footer_updated": "Cusboonaysiintii ugu dambeysay: Abriil 2026",
