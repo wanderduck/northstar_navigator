@@ -119,6 +119,7 @@ PYTHONPATH=src uv run python scripts/scrape_dhs_manual.py   # Uses saved cookies
   - `prompts.py` — System prompts for all pipeline stages
   - `readability.py` — Flesch-Kincaid reading level checking
   - `config.py` — Settings, paths, model configuration
+  - `translations.py` — Hardcoded UI translations (en/es/hmn/so) for all non-persistent strings
   - `rag/` — RAG pipeline (ChromaDB, BM25, hybrid retrieval, ingestion)
   - `tools/` — Function calling tools (FPL calc, benefits search, county programs, docs)
 - `src/app.py` — Gradio UI entry point
@@ -161,6 +162,9 @@ Navigator deps are in `[project.optional-dependencies] navigator` to avoid confl
 - **Gradio custom theme**: Use `gr.themes.Base()` with `gr.themes.Color(c50=..., c950=...)` for hue, then `.set()` for specific overrides. Wanderduck palette defined in `docs/Styling/Wanderduck_ColourDuck_Preview.html`.
 - **Gradio header icon**: `gr.Image` adds container padding. Use `gr.HTML` with inline `<img style="height:56px">` for precise icon-beside-title alignment.
 - **Pydantic models for LLM output**: Use `field: type | None = None` for any field the LLM might not extract. Strict `int`/`str` without defaults will crash on multilingual or incomplete input.
+- **Gradio image serving**: `/file=` paths fail on RunPod (different absolute paths). Use base64 data URIs for embedded images: `data:image/png;base64,{b64}` in `gr.HTML`. Reliable everywhere.
+- **Gradio ChatInterface examples**: Clicking an example does NOT update `additional_inputs` dropdowns. The language dropdown stays on its current value. Workaround: detect language from input text in `process_message` and override when dropdown is "English" but model detects non-English.
+- **Gradio dynamic labels (approach B)**: Component `label=` can't change after creation. Use `show_label=False` + `gr.HTML` heading above each component, wired to `language.change()` for translation.
 - Ollama must be running (`systemctl start ollama`) before launching the Gradio UI
 - `cuml.accel` is disabled due to RAPIDS cu12 vs system CUDA 13.1 header mismatch; use cuML via direct imports instead
 - The notebook preloads both cu12 and cu13 shared libraries to support TensorFlow and PyTorch simultaneously
