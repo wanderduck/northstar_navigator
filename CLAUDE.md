@@ -188,6 +188,7 @@ Navigator deps are in `[project.optional-dependencies] navigator` to avoid confl
 - **Cloud Translate API**: `google-cloud-translate` v3 (NMT). Language codes: `es`, `hmn` (Hmong), `so` (Somali). Auth via service account JSON in Modal secret.
 - **Gemma 4 31B**: `google/gemma-4-31B-it` needs A100-80GB in bf16. E4B fits on L4 or RTX 4090.
 - **Navigator import chain**: `intake.py` and `response.py` import `OllamaClient` → triggers `import ollama` at module level. Must be installed even with alternative clients.
+- **`.gitignore` `runpod` patterns must be anchored**: The `/runpod`, `/runpod.pub`, `/runpodctl` entries MUST keep the leading `/` to anchor them to the repo root. An unanchored `runpod` pattern matches *any* path component named `runpod`, which silently makes the entire `deploy/runpod/` directory invisible to git — new files added there will not appear in `git status` or `git ls-files`. If a new file under `deploy/runpod/` is missing from git status, check this gitignore first.
 
 ### Modal (Legacy — training only, not used for live demo)
 
@@ -203,7 +204,9 @@ Modal is used for cloud GPU training scripts (`deploy/modal_finetune*.py`, `depl
 **IMPORTANT: ALWAYS read `docs/reports/runpod_manual.md` before writing ANY RunPod code.**
 
 - **RunPod documentation manual**: `docs/reports/runpod_manual.md` — comprehensive reference covering all RunPod services (Pods, Serverless, Flash SDK, CLI, API, storage, GPU types, Hub, tutorials, and Navigator-specific deployment guide)
-- **Recommended deployment** (Secure Cloud): RTX 4090 (~$0.69/hr, 24GB VRAM) for the live-demo pod via `deploy.sh`; RTX A5000 (~$0.36/hr, 24GB VRAM, ~25-30% slower tokens/sec) for the separate testing pod via `deploy_a5000.sh`. L4 fallback (~$0.43/hr) via `RUNPOD_GPU=` env override. Ports 7860/http + 11434/http + 22/tcp, `OLLAMA_HOST=0.0.0.0`. Cloud type defaults to SECURE; override with `RUNPOD_CLOUD_TYPE=COMMUNITY`.
+- **Recommended deployment** (Secure Cloud): RTX 4090 (~$0.69/hr, 24GB VRAM) for the live-demo pod via `deploy.sh`; RTX A5000 (~$0.36/hr, 24GB VRAM, ~25-30% slower tokens/sec, ~48% cheaper) for the separate testing pod via `deploy_a5000.sh`. L4 fallback (~$0.43/hr) via `RUNPOD_GPU=` env override. Ports 7860/http + 11434/http + 22/tcp, `OLLAMA_HOST=0.0.0.0`. Cloud type defaults to SECURE; override with `RUNPOD_CLOUD_TYPE=COMMUNITY`.
+- **`runpodctl pod create` cloud type defaults to `SECURE`** (verified via `runpodctl pod create --help`). The explicit `--cloud-type "$CLOUD_TYPE"` flag in `deploy.sh` is defensive — matches the runpodctl default but pins it against future flag changes. Community Cloud is cheaper but lower-availability; not recommended for the judging-period live demo.
+- **Live-demo pod is on Secure Cloud at $0.69/hr** (user-confirmed billing). Ignore any older "$0.44/hr" references in archive docs — that was Community Cloud pricing and was never the actual billed rate for this project.
 - **Pod URL pattern**: `https://[POD_ID]-[PORT].proxy.runpod.net`
 - **No Docker Compose on Pods** — Ollama and Gradio run as co-located processes
 - **HTTP proxy 100-second Cloudflare timeout** — long requests need WebSocket/polling
